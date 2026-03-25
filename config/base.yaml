@@ -1,0 +1,59 @@
+organ: pancreas
+dataset_path: data/Dataset002_BTCV
+split_file: data/Dataset002_BTCV/splits_final.json
+split_id: 0
+batch_size: 1
+epochs: 1
+learning_rate: 0.01
+weight_decay: 3.0e-5
+seed: 1234
+num_workers: 0
+save_dir: runs
+device: cuda
+pruning_ratio: null
+
+quantization:
+  enabled: false
+  mode: none
+
+data:
+  dataset_json: data/Dataset002_BTCV/dataset.json
+  plans_file: data/Dataset002_BTCV/nnUNetPlans.json
+  configuration: 3d_fullres
+  data_identifier: nnUNetPlans_3d_fullres
+  cache_data: false
+  train_samples_per_epoch: 1
+  val_samples_per_epoch: 1
+  oversample_foreground_percent: 0.33
+  persistent_workers: false
+  pin_memory: true
+
+model:
+  base_channels: 48
+  patch_size: null
+  num_heads: [4, 8, 16, 32]
+  metaformer_layers: [2, 2, 2]
+  token_mixer: attention
+  drop: 0.2
+  drop_path: 0.2
+  prune_flags_list:
+    -
+      - {prune_ln2_mlp: false, prune_ln1_token_mixer: false}
+      - {prune_ln2_mlp: true, prune_ln1_token_mixer: false}
+    -
+      - {prune_ln2_mlp: false, prune_ln1_token_mixer: false}
+      - {prune_ln2_mlp: true, prune_ln1_token_mixer: false}
+    -
+      - {prune_ln2_mlp: false, prune_ln1_token_mixer: false}
+      - {prune_ln2_mlp: true, prune_ln1_token_mixer: false}
+
+train:
+  momentum: 0.99
+  grad_clip: 12.0
+  amp: true
+  save_every: 1
+  full_validation_every: 1
+
+validation:
+  overlap: 0.0
+  use_full_volume: true

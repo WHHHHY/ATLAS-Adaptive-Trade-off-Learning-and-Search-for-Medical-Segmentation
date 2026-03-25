@@ -1,0 +1,68 @@
+organ: pancreas
+
+dataset_root: /root/autodl-tmp/nnUNet(integration)/data/Dataset002_BTCV
+base_model_ckpt: /root/autodl-tmp/nnUNet(integration)/runs/20260325-000348-pancreas-seed1234/checkpoints/best.pt
+
+calibration:
+  num_samples: 8
+  split: val
+  fold: 0
+  batch_size: 1
+  seed: 1234
+  max_spatial_tokens: 64
+
+freeze_blocks:
+  - patch_embed
+  - seg_head
+
+allowed_actions:
+  - observe
+  - score
+  - prune
+  - quantize
+  - keep
+
+objective:
+  similarity: 1.0
+  risk: 1.0
+  alpha: 0.5
+  beta: 0.25
+  gamma: 0.25
+  encoder_weight: 0.4
+  skip_weight: 0.2
+  decoder_weight: 0.4
+  lambda_dice: 1.0
+  lambda_param: 0.05
+  lambda_flops: 0.03
+  lambda_ram: 0.08
+
+search_thresholds:
+  score_percentile: 75.0
+  risk_percentile: 75.0
+  min_similarity: null
+  max_risk: null
+  tau_prune: 0.75
+  tau_quant: 0.40
+  tau_low: 0.30
+  tau_high: 0.80
+  max_prune_ratio: 0.5
+  eta_expand: 0.05
+
+search:
+  max_trials: 3
+  quick_epochs: 3
+  epsilon_accept: 0.0001
+  strategy: conservative
+  enable_expand: false
+  max_units_per_trial: 1
+
+quantization:
+  weight_bits: [4, 8, 16]
+  act_bits: [8, 16, 32]
+  allocator_mode: conservative
+
+runtime:
+  device: cpu
+  git_commit_on_improve: false
+
+output_path: /root/autodl-tmp/AutoResearch/projects/slimformer_typed_search/runs/search_artifacts/metrics/example_organ_metrics.json

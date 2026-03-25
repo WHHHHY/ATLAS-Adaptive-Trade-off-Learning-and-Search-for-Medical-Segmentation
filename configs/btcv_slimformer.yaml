@@ -1,0 +1,53 @@
+experiment_name: slimformer_btcv_minimal
+seed: 1234
+device: cuda
+output_dir: outputs/slimformer_btcv_minimal
+
+data:
+  root: data/Dataset002_BTCV
+  dataset_json: data/Dataset002_BTCV/dataset.json
+  plans_file: data/Dataset002_BTCV/nnUNetPlans.json
+  split_file: data/Dataset002_BTCV/splits_final.json
+  configuration: 3d_fullres
+  data_identifier: nnUNetPlans_3d_fullres
+  cache_data: false
+  train_samples_per_epoch: 250
+  val_samples_per_epoch: 50
+  oversample_foreground_percent: 0.33
+  num_workers: 4
+  persistent_workers: true
+  pin_memory: true
+
+model:
+  base_channels: 48
+  patch_size: null
+  num_heads: [4, 8, 16, 32]
+  metaformer_layers: [2, 2, 2]
+  token_mixer: mamba
+  drop: 0.2
+  drop_path: 0.2
+  prune_flags_list:
+    -
+      - {prune_ln2_mlp: false, prune_ln1_token_mixer: false}
+      - {prune_ln2_mlp: true, prune_ln1_token_mixer: false}
+    -
+      - {prune_ln2_mlp: false, prune_ln1_token_mixer: false}
+      - {prune_ln2_mlp: true, prune_ln1_token_mixer: false}
+    -
+      - {prune_ln2_mlp: false, prune_ln1_token_mixer: false}
+      - {prune_ln2_mlp: true, prune_ln1_token_mixer: false}
+
+train:
+  batch_size: null
+  epochs: 1500
+  lr: 0.01
+  weight_decay: 3.0e-5
+  momentum: 0.99
+  grad_clip: 12.0
+  amp: true
+  save_every: 50
+  full_validation_every: 50
+
+validation:
+  overlap: 0.0
+  use_full_volume: true
