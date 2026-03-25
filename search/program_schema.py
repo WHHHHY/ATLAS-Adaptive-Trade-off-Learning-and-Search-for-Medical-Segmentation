@@ -85,7 +85,13 @@ class QuantizationConfig:
 @dataclass(slots=True)
 class RuntimeConfig:
     device: str = "cuda"
-    git_commit_on_improve: bool = False
+    git_repo_root: str | None = None
+    git_remote: str = "origin"
+    git_branch: str | None = None
+    git_commit_on_accept: bool = False
+    git_push_on_accept: bool = False
+    git_tag_on_accept: bool = False
+    git_rollback_on_reject: bool = True
 
 
 @dataclass(slots=True)
@@ -222,7 +228,11 @@ def _build_program_config(payload: dict[str, Any]) -> ProgramConfig:
     thresholds = _validate_thresholds(ThresholdConfig(**_as_mapping(payload.get("search_thresholds"), "search_thresholds")))
     search = _validate_search(SearchConfig(**_as_mapping(payload.get("search"), "search")))
     quantization = _validate_quantization(QuantizationConfig(**_as_mapping(payload.get("quantization"), "quantization")))
-    runtime = RuntimeConfig(**_as_mapping(payload.get("runtime"), "runtime"))
+    runtime_payload = dict(_as_mapping(payload.get("runtime"), "runtime"))
+    if "git_commit_on_improve" in runtime_payload and "git_commit_on_accept" not in runtime_payload:
+        runtime_payload["git_commit_on_accept"] = runtime_payload["git_commit_on_improve"]
+    runtime_payload.pop("git_commit_on_improve", None)
+    runtime = RuntimeConfig(**runtime_payload)
     freeze_blocks = _normalize_freeze_blocks(payload.get("freeze_blocks"))
     allowed_actions = _validate_allowed_actions(payload.get("allowed_actions"), freeze_blocks)
     return ProgramConfig(
@@ -258,4 +268,6 @@ def load_program_config(program_path: str | Path) -> ProgramConfig:
     program.base_model_ckpt = str(checkpoint_path)
     if program.output_path is not None:
         program.output_path = str(Path(program.output_path).expanduser().resolve())
+    if program.runtime.git_repo_root is not None:
+        program.runtime.git_repo_root = str(Path(program.runtime.git_repo_root).expanduser().resolve())
     return program

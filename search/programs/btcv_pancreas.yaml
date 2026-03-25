@@ -1,5 +1,4 @@
 organ: pancreas
-
 dataset_root: /root/autodl-tmp/nnUNet(integration)/data/Dataset002_BTCV
 base_model_ckpt: /root/autodl-tmp/nnUNet(integration)/runs/20260325-000348-pancreas-seed1234/checkpoints/best.pt
 
@@ -66,9 +65,9 @@ runtime:
   git_repo_root: /root/autodl-tmp/ATLAS
   git_remote: origin
   git_branch: search/btcv-pancreas
-  git_commit_on_accept: false
-  git_push_on_accept: false
+  git_commit_on_accept: true
+  git_push_on_accept: true
   git_tag_on_accept: false
-  git_rollback_on_reject: false
+  git_rollback_on_reject: true
 
-output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/example_organ_metrics.json
+output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json

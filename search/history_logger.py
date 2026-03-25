@@ -65,6 +65,8 @@ def build_history_entry(
     error_message: str | None,
     best_utility_before: float | None,
     best_utility_after: float | None,
+    git_head_before: str | None = None,
+    git_head_after: str | None = None,
 ) -> dict[str, Any]:
     allocation_reasons = [action.get("allocation_reason") for action in unit_actions if action.get("allocation_reason")]
     return {
@@ -82,4 +84,6 @@ def build_history_entry(
         "best_utility_before": best_utility_before,
         "best_utility_after": best_utility_after,
         "allocation_reason": allocation_reasons,
+        "git_head_before": git_head_before,
+        "git_head_after": git_head_after,
     }

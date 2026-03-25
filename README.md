@@ -1,6 +1,6 @@
-# SlimFormer Typed Search MVP
+# ATLAS Typed Search
 
-这个目录是从 nnUNet SlimFormer 训练链路中抽取出的极简单任务仓库。
+这个仓库承载 BTCV pancreas 上的 typed-search 基线，以及后续 Git 驱动的自动 accept/reject 搜索。
 
 保留内容：
 - BTCV 预处理数据读取
@@ -56,15 +56,15 @@ python run_train.py --config config/base.yaml
 python run_val.py --config config/base.yaml --ckpt runs/<run_id>/checkpoints/best.pt
 ```
 
-## AutoResearch Mirror
+## 仓库定位
 
-这个目录是给后续 `AutoResearch` / git / proposer 扩展准备的长期工作副本。
+当前仓库已从 `AutoResearch/projects/slimformer_typed_search` 迁入，并保留与原 MVP 相同的模块边界。
 
 兼容策略：
 
-- 原始工作目录仍保留在 `/root/autodl-tmp/nnUNet(integration)`
-- 这里保留相同的 CLI、测试和模块边界，便于后续独立初始化 git
-- 当前模板仍默认引用原始目录中的现有 BTCV 数据和已训练 checkpoint，以保证不改功能即可运行
+- 继续复用 `/root/autodl-tmp/nnUNet(integration)` 中现成的 BTCV 预处理数据与已有 checkpoint
+- 训练、验证、typed-search 三层代码都在本仓库独立维护
+- 自动搜索的 accepted state 会固化到 `search/results/accepted/`，作为 Git 回滚锚点
 
 ## Typed Search MVP
 
@@ -82,14 +82,14 @@ python run_val.py --config config/base.yaml --ckpt runs/<run_id>/checkpoints/bes
 1. 生成 activation metrics
 
 ```bash
-python -m search.collect_activations --program search/programs/example_organ.yaml --device cpu
+python -m search.collect_activations --program search/programs/btcv_pancreas.yaml --device cpu
 ```
 
 2. 运行 dry-run search loop
 
 ```bash
 python -m search.search_loop \
-  --program search/programs/example_organ.yaml \
+  --program search/programs/btcv_pancreas.yaml \
   --metrics tests/fixtures/search/example_organ_metrics.json \
   --max-trials 1 \
   --dry-run
@@ -103,13 +103,24 @@ python -m unittest tests.test_metric_smoke tests.test_search_smoke
 
 运行产物默认写入 `runs/`，源码目录不应再承载 trial 输出。
 
-## AutoResearch Template
+## BTCV Pancreas Program
 
-更贴近长期 AutoResearch 布局的模板配置见：
+默认搜索 program：
 
-- `configs/search/autoresearch_example_organ.yaml`
+- `search/programs/btcv_pancreas.yaml`
 
-它保持与当前 `search/programs/example_organ.yaml` 等价的功能范围，只是把字段组织得更适合后续 proposer 和 runtime 扩展。
+对应的 AutoResearch 风格配置镜像：
+
+- `configs/search/btcv_pancreas.yaml`
+
+Git runtime 默认策略：
+
+- `commit_on_accept=true`
+- `push_on_accept=true`
+- `tag_on_accept=false`
+- `rollback_on_reject=true`
+
+当某个 trial 的 utility 超过当前 accepted utility 时，仓库会把 accepted snapshot 写到 `search/results/accepted/` 并执行 commit + push；否则重置到最后一个 accepted commit。
 
 ## MVP 范围
 
@@ -124,7 +135,7 @@ python -m unittest tests.test_metric_smoke tests.test_search_smoke
 - dry-run evaluator
 - quick evaluator 框架
 - utility 计算
-- accept/reject + best_state rollback
+- accept/reject + git rollback to accepted state
 - history.jsonl
 
 当前仍是 TODO：

@@ -8,4 +8,6 @@ runs/
 logs/
 tmp/
 
-search/results/
+search/results/*
+!search/results/accepted/
+!search/results/accepted/.gitkeep

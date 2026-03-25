@@ -62,6 +62,12 @@ quantization:
 
 runtime:
   device: cpu
-  git_commit_on_improve: false
+  git_repo_root: /root/autodl-tmp/ATLAS
+  git_remote: origin
+  git_branch: search/btcv-pancreas
+  git_commit_on_accept: false
+  git_push_on_accept: false
+  git_tag_on_accept: false
+  git_rollback_on_reject: false
 
-output_path: /root/autodl-tmp/AutoResearch/projects/slimformer_typed_search/runs/search_artifacts/metrics/example_organ_metrics.json
+output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/example_organ_metrics.json
