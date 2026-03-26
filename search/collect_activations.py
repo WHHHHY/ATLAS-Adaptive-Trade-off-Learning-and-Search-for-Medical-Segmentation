@@ -9,7 +9,7 @@ from typing import Any
 import torch
 
 from checkpoint import load_checkpoint
-from config import load_config, resolve_target_label
+from config import resolve_target_label
 from dataset import BTCVPatchDataset, load_split
 from engine import build_dataloader
 from model import build_model
@@ -41,8 +41,7 @@ def _derive_runtime_config(program: ProgramConfig, payload: dict[str, Any], devi
     config_from_ckpt = deepcopy(payload.get("config") or {})
     if not config_from_ckpt:
         raise ValueError("Checkpoint does not contain a serialized config.")
-    config_path = config_from_ckpt.get("config_path")
-    runtime_config = load_config(config_path) if config_path else config_from_ckpt
+    runtime_config = config_from_ckpt
     runtime_config["organ"] = program.organ
     runtime_config["data"]["root"] = program.dataset_root
     runtime_config["data"]["dataset_json"] = str(Path(program.dataset_root) / "dataset.json")
