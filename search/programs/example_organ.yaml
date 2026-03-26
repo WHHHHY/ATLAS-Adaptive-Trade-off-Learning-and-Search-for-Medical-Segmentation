@@ -72,5 +72,9 @@ runtime:
     push_on_accept: false
     tag_on_accept: false
     rollback_on_reject: false
+  benchmark:
+    warmup_iters: 2
+    measure_iters: 5
+    use_cuda_events: true
 
 output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/example_organ_metrics.json

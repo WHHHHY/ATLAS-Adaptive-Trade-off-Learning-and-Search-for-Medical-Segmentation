@@ -62,7 +62,7 @@ quantization:
   allocator_mode: conservative
 
 runtime:
-  device: cpu
+  device: cuda
   git:
     enabled: true
     repo_root: /root/autodl-tmp/ATLAS
@@ -72,5 +72,9 @@ runtime:
     push_on_accept: true
     tag_on_accept: false
     rollback_on_reject: true
+  benchmark:
+    warmup_iters: 10
+    measure_iters: 30
+    use_cuda_events: true
 
 output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json

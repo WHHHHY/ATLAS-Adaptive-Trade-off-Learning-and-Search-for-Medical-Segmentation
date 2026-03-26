@@ -50,11 +50,53 @@ def _collect_parameter_counts(model: nn.Module) -> tuple[int, dict[str, int]]:
     return total, unit_params
 
 
+def _benchmark_latency_ms(
+    model: nn.Module,
+    sample_input: torch.Tensor,
+    device: torch.device | None,
+    warmup_iters: int,
+    measure_iters: int,
+    use_cuda_events: bool,
+) -> float:
+    warmup_iters = max(int(warmup_iters), 0)
+    measure_iters = max(int(measure_iters), 1)
+
+    with torch.no_grad():
+        if device is not None and device.type == "cuda" and use_cuda_events:
+            for _ in range(warmup_iters):
+                _ = model(sample_input)
+            torch.cuda.synchronize(device)
+            timings_ms: list[float] = []
+            for _ in range(measure_iters):
+                start_event = torch.cuda.Event(enable_timing=True)
+                end_event = torch.cuda.Event(enable_timing=True)
+                start_event.record()
+                _ = model(sample_input)
+                end_event.record()
+                torch.cuda.synchronize(device)
+                timings_ms.append(float(start_event.elapsed_time(end_event)))
+        else:
+            for _ in range(warmup_iters):
+                _ = model(sample_input)
+            timings_ms = []
+            for _ in range(measure_iters):
+                start_time = time.perf_counter()
+                _ = model(sample_input)
+                if device is not None and device.type == "cuda":
+                    torch.cuda.synchronize(device)
+                timings_ms.append((time.perf_counter() - start_time) * 1000.0)
+    timings_ms.sort()
+    return float(timings_ms[len(timings_ms) // 2])
+
+
 def profile_model_resources(
     model: nn.Module,
     sample_input: torch.Tensor,
     unit_quant_config: dict[str, dict[str, int]] | None = None,
     device: torch.device | None = None,
+    benchmark_warmup_iters: int = 10,
+    benchmark_measure_iters: int = 30,
+    benchmark_use_cuda_events: bool = True,
 ) -> dict[str, Any]:
     unit_quant_config = unit_quant_config or {}
     named_modules = dict(model.named_modules())
@@ -94,12 +136,9 @@ def profile_model_resources(
     with torch.no_grad():
         if device is not None and device.type == "cuda":
             torch.cuda.reset_peak_memory_stats(device)
-            torch.cuda.synchronize(device)
-        latency_start = time.perf_counter()
         _ = model(sample_input)
         if device is not None and device.type == "cuda":
             torch.cuda.synchronize(device)
-        latency_ms = (time.perf_counter() - latency_start) * 1000.0
         peak_vram_mb = float(torch.cuda.max_memory_allocated(device) / (1024 ** 2)) if device is not None and device.type == "cuda" else 0.0
 
     for handle in handles:
@@ -109,7 +148,6 @@ def profile_model_resources(
     effective_params = float(params_total)
     effective_flops = float(flops_total)
     effective_ram = float(peak_vram_mb)
-    effective_latency_ms = float(latency_ms)
     for unit_id, quant_cfg in unit_quant_config.items():
         weight_bits = int(quant_cfg.get("weight_bits", 32))
         act_bits = int(quant_cfg.get("act_bits", 32))
@@ -122,7 +160,15 @@ def profile_model_resources(
         effective_flops -= unit_flops
         effective_flops += unit_flops * ((weight_ratio + act_ratio) / 2.0)
         effective_ram *= 1.0 - 0.05 * (1.0 - act_ratio)
-        effective_latency_ms *= 1.0 - 0.03 * (1.0 - ((weight_ratio + act_ratio) / 2.0))
+
+    latency_ms = _benchmark_latency_ms(
+        model,
+        sample_input,
+        device,
+        warmup_iters=benchmark_warmup_iters,
+        measure_iters=benchmark_measure_iters,
+        use_cuda_events=benchmark_use_cuda_events,
+    )
 
     return {
         "params_total": int(params_total),
@@ -132,7 +178,7 @@ def profile_model_resources(
         "peak_vram_mb": float(peak_vram_mb),
         "peak_vram_effective_mb": float(max(effective_ram, 0.0)),
         "latency_ms": float(max(latency_ms, 1e-6)),
-        "latency_effective_ms": float(max(effective_latency_ms, 1e-6)),
+        "latency_effective_ms": float(max(latency_ms, 1e-6)),
         "params_by_unit": params_by_unit,
         "flops_by_unit": flops_by_unit,
     }

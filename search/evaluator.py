@@ -308,6 +308,15 @@ def evaluate_candidate(
             raise ValueError("Validation loader produced no batches during evaluation")
         sample_input = sample_batch["image"].to(device)
         profile = profile_model_resources(model, sample_input, unit_quant_config=resolved_config["quantization"].get("unit_bits") or {}, device=device)
+        profile = profile_model_resources(
+            model,
+            sample_input,
+            unit_quant_config=resolved_config["quantization"].get("unit_bits") or {},
+            device=device,
+            benchmark_warmup_iters=program.runtime.benchmark_warmup_iters,
+            benchmark_measure_iters=program.runtime.benchmark_measure_iters,
+            benchmark_use_cuda_events=program.runtime.benchmark_use_cuda_events,
+        )
         checkpoint_path = run_dir / "candidate_last.pt"
         save_checkpoint(checkpoint_path, model, optimizer, scheduler, scaler, resolved_config["train"]["epochs"], float(val_metrics["pseudo_dice"]), resolved_config["train"]["epochs"], resolved_config)
         result_metrics = {

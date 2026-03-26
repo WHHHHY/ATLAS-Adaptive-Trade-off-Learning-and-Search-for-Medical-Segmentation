@@ -94,6 +94,9 @@ class RuntimeConfig:
     git_push_on_accept: bool = False
     git_tag_on_accept: bool = False
     git_rollback_on_reject: bool = True
+    benchmark_warmup_iters: int = 10
+    benchmark_measure_iters: int = 30
+    benchmark_use_cuda_events: bool = True
 
 
 @dataclass(slots=True)
@@ -249,6 +252,14 @@ def _build_program_config(payload: dict[str, Any]) -> ProgramConfig:
             runtime_payload["git_tag_on_accept"] = git_payload["tag_on_accept"]
         if "rollback_on_reject" in git_payload:
             runtime_payload["git_rollback_on_reject"] = git_payload["rollback_on_reject"]
+    benchmark_payload = _as_mapping(runtime_payload.pop("benchmark", None), "runtime.benchmark")
+    if benchmark_payload:
+        if "warmup_iters" in benchmark_payload:
+            runtime_payload["benchmark_warmup_iters"] = benchmark_payload["warmup_iters"]
+        if "measure_iters" in benchmark_payload:
+            runtime_payload["benchmark_measure_iters"] = benchmark_payload["measure_iters"]
+        if "use_cuda_events" in benchmark_payload:
+            runtime_payload["benchmark_use_cuda_events"] = benchmark_payload["use_cuda_events"]
     if "git_commit_on_improve" in runtime_payload and "git_commit_on_accept" not in runtime_payload:
         runtime_payload["git_commit_on_accept"] = runtime_payload["git_commit_on_improve"]
     runtime_payload.pop("git_commit_on_improve", None)
