@@ -1,9 +1,9 @@
 {
   "trial_id": "trial_001",
-  "candidate_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/candidate.json",
-  "metrics_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/metrics.json",
-  "checkpoint_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/candidate_last.pt",
-  "resolved_config_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/candidate_resolved_config.json",
-  "utility": 0.015064415021261747,
+  "candidate_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-122000/trial_001/candidate.json",
+  "metrics_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-122000/trial_001/metrics.json",
+  "checkpoint_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-122000/trial_001/candidate_last.pt",
+  "resolved_config_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-122000/trial_001/candidate_resolved_config.json",
+  "utility": 0.01513907872831241,
   "source_metrics_json": "/root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json"
 }

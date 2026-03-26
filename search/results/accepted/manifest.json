@@ -2,6 +2,6 @@
   "trial_id": "trial_001",
   "program_path": "/root/autodl-tmp/ATLAS/search/programs/btcv_pancreas.yaml",
   "metrics_path": "/root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json",
-  "run_root": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200",
-  "accepted_ref_before": "22fd6086538fc429a2ad03927ddfb5a756fb1030"
+  "run_root": "/root/autodl-tmp/ATLAS/runs/search-20260326-122000",
+  "accepted_ref_before": "34b9811a722bd329584c637926fbb8abbf2b9a9e"
 }
