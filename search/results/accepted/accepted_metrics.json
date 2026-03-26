@@ -1,0 +1,22 @@
+{
+  "val_dice": 0.015138819937056477,
+  "val_loss": 1.0619377419352531,
+  "train_loss_last": 1.0352825671434402,
+  "params_total": 16925186,
+  "params_effective": 16925186.0,
+  "flops_g": 555.378425856,
+  "flops_effective_g": 555.378425856,
+  "peak_vram_mb": 1377.36474609375,
+  "peak_vram_effective_mb": 1377.36474609375,
+  "latency_ms": 59.6418571472168,
+  "latency_effective_ms": 59.6418571472168,
+  "missing_keys": [],
+  "unexpected_keys": [],
+  "invalid_trial": false,
+  "error_message": null,
+  "mode": "quick_eval",
+  "utility": 0.015064415021261747,
+  "candidate_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/candidate.json",
+  "resolved_config_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/candidate_resolved_config.json",
+  "checkpoint_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_001/candidate_last.pt"
+}

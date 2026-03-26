@@ -1,0 +1,88 @@
+{
+  "base_model_ckpt": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate_last.pt",
+  "source_metrics_json": "/root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json",
+  "frozen_blocks": [
+    "patch_embed",
+    "seg_head"
+  ],
+  "unit_actions": [
+    {
+      "unit_id": "unit_2",
+      "action_type": "prune",
+      "prune_ratio": 0.4562263250350953,
+      "weight_bits": null,
+      "act_bits": null,
+      "allocation_mode": null,
+      "allocation_reason": null,
+      "expand_type": null,
+      "expand_delta": null,
+      "proposer_reason": "S_unit=0.9781 >= tau_prune=0.7500; prune_ratio=0.4562",
+      "score_snapshot": {
+        "S_unit": 0.9781131625175477,
+        "R_unit": 0.24548098928644324,
+        "utility_from_metrics_json": 0.7326321732311044
+      }
+    }
+  ],
+  "notes": "Heuristic stage-2 candidate.",
+  "proposer_reason": "heuristic strategy=conservative; selected 1 action(s)",
+  "metadata": {
+    "strategy": "conservative",
+    "history_summary": {
+      "num_entries": 1,
+      "reject_streaks": {
+        "prune": 0,
+        "quantize": 0,
+        "keep": 0,
+        "expand": 0
+      },
+      "low_bit_rejects": {
+        "weight": {},
+        "act": {}
+      },
+      "last_entry": {
+        "trial_id": "trial_000_baseline",
+        "source_metrics_json": "/root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json",
+        "candidate_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate.json",
+        "proposal": "Baseline evaluation before search",
+        "proposal_reason": "Baseline evaluation before search",
+        "unit_actions": [],
+        "candidate_config": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate_resolved_config.json",
+        "resolved_config_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate_resolved_config.json",
+        "metrics": {
+          "val_dice": 0.0066208584186101815,
+          "val_loss": 1.02298354357481,
+          "train_loss_last": 1.040921539068222,
+          "params_total": 16925186,
+          "params_effective": 16925186.0,
+          "flops_g": 555.378425856,
+          "flops_effective_g": 555.378425856,
+          "peak_vram_mb": 1377.77880859375,
+          "peak_vram_effective_mb": 1377.77880859375,
+          "latency_ms": 59.34899139404297,
+          "latency_effective_ms": 59.34899139404297,
+          "missing_keys": [],
+          "unexpected_keys": [],
+          "invalid_trial": false,
+          "error_message": null,
+          "mode": "quick_eval",
+          "utility": 0.0066208584186101815,
+          "candidate_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate.json",
+          "resolved_config_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate_resolved_config.json",
+          "checkpoint_path": "/root/autodl-tmp/ATLAS/runs/search-20260326-121200/trial_000_baseline/candidate_last.pt"
+        },
+        "utility": 0.0066208584186101815,
+        "accept_or_reject": "accept",
+        "invalid_trial": false,
+        "error_message": null,
+        "best_utility_before": null,
+        "best_utility_after": 0.0066208584186101815,
+        "allocation_reason": [],
+        "git_head_before": "22fd6086538fc429a2ad03927ddfb5a756fb1030",
+        "git_head_after": "22fd6086538fc429a2ad03927ddfb5a756fb1030",
+        "commit_hash": "22fd6086538fc429a2ad03927ddfb5a756fb1030",
+        "rollback_target": "22fd6086538fc429a2ad03927ddfb5a756fb1030"
+      }
+    }
+  }
+}
