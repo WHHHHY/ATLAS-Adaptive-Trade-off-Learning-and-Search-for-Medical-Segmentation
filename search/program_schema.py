@@ -49,6 +49,7 @@ class ObjectiveConfig:
     lambda_param: float = 0.05
     lambda_flops: float = 0.03
     lambda_ram: float = 0.08
+    lambda_latency: float = 0.02
 
 
 @dataclass(slots=True)
@@ -85,6 +86,7 @@ class QuantizationConfig:
 @dataclass(slots=True)
 class RuntimeConfig:
     device: str = "cuda"
+    git_enabled: bool = False
     git_repo_root: str | None = None
     git_remote: str = "origin"
     git_branch: str | None = None
@@ -163,7 +165,7 @@ def _validate_calibration(config: CalibrationConfig) -> CalibrationConfig:
 def _validate_objective(config: ObjectiveConfig) -> ObjectiveConfig:
     if config.alpha < 0.0 or config.beta < 0.0 or config.gamma < 0.0:
         raise ValueError("objective alpha/beta/gamma must be >= 0")
-    for field_name in ("lambda_dice", "lambda_param", "lambda_flops", "lambda_ram"):
+    for field_name in ("lambda_dice", "lambda_param", "lambda_flops", "lambda_ram", "lambda_latency"):
         if getattr(config, field_name) < 0.0:
             raise ValueError(f"objective.{field_name} must be >= 0")
     weight_sum = config.encoder_weight + config.skip_weight + config.decoder_weight
@@ -229,6 +231,24 @@ def _build_program_config(payload: dict[str, Any]) -> ProgramConfig:
     search = _validate_search(SearchConfig(**_as_mapping(payload.get("search"), "search")))
     quantization = _validate_quantization(QuantizationConfig(**_as_mapping(payload.get("quantization"), "quantization")))
     runtime_payload = dict(_as_mapping(payload.get("runtime"), "runtime"))
+    git_payload = _as_mapping(runtime_payload.pop("git", None), "runtime.git")
+    if git_payload:
+        if "enabled" in git_payload:
+            runtime_payload["git_enabled"] = git_payload["enabled"]
+        if "repo_root" in git_payload:
+            runtime_payload["git_repo_root"] = git_payload["repo_root"]
+        if "remote" in git_payload:
+            runtime_payload["git_remote"] = git_payload["remote"]
+        if "branch" in git_payload:
+            runtime_payload["git_branch"] = git_payload["branch"]
+        if "commit_on_accept" in git_payload:
+            runtime_payload["git_commit_on_accept"] = git_payload["commit_on_accept"]
+        if "push_on_accept" in git_payload:
+            runtime_payload["git_push_on_accept"] = git_payload["push_on_accept"]
+        if "tag_on_accept" in git_payload:
+            runtime_payload["git_tag_on_accept"] = git_payload["tag_on_accept"]
+        if "rollback_on_reject" in git_payload:
+            runtime_payload["git_rollback_on_reject"] = git_payload["rollback_on_reject"]
     if "git_commit_on_improve" in runtime_payload and "git_commit_on_accept" not in runtime_payload:
         runtime_payload["git_commit_on_accept"] = runtime_payload["git_commit_on_improve"]
     runtime_payload.pop("git_commit_on_improve", None)

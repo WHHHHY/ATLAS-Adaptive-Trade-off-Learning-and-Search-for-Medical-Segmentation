@@ -34,6 +34,7 @@ objective:
   lambda_param: 0.05
   lambda_flops: 0.03
   lambda_ram: 0.08
+  lambda_latency: 0.02
 
 search_thresholds:
   score_percentile: 75.0
@@ -62,12 +63,14 @@ quantization:
 
 runtime:
   device: cpu
-  git_repo_root: /root/autodl-tmp/ATLAS
-  git_remote: origin
-  git_branch: search/btcv-pancreas
-  git_commit_on_accept: true
-  git_push_on_accept: true
-  git_tag_on_accept: false
-  git_rollback_on_reject: true
+  git:
+    enabled: true
+    repo_root: /root/autodl-tmp/ATLAS
+    remote: origin
+    branch: search/btcv-pancreas
+    commit_on_accept: true
+    push_on_accept: true
+    tag_on_accept: false
+    rollback_on_reject: true
 
 output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/btcv_pancreas_metrics.json

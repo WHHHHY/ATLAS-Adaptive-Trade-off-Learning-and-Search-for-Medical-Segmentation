@@ -20,6 +20,7 @@ def _git(repo_root: Path, *args: str, check: bool = True) -> subprocess.Complete
 
 @dataclass(slots=True)
 class GitRuntimeConfig:
+    enabled: bool = False
     repo_root: str | None = None
     remote: str = "origin"
     branch: str | None = None
@@ -30,8 +31,8 @@ class GitRuntimeConfig:
     accepted_state_dir: str = "search/results/accepted"
 
     @property
-    def enabled(self) -> bool:
-        return any((self.commit_on_accept, self.push_on_accept, self.tag_on_accept, self.rollback_on_reject))
+    def active(self) -> bool:
+        return self.enabled and any((self.commit_on_accept, self.push_on_accept, self.tag_on_accept, self.rollback_on_reject))
 
 
 class GitSearchRuntime:
@@ -41,7 +42,7 @@ class GitSearchRuntime:
         self.accepted_ref: str | None = None
 
     def ensure_ready(self) -> None:
-        if not self.config.enabled:
+        if not self.config.active:
             return
         if self.repo_root is None:
             raise RuntimeError("Git runtime requires git_repo_root or repo_hint.")
@@ -82,7 +83,7 @@ class GitSearchRuntime:
         metrics_payload: dict[str, Any],
         best_state: dict[str, Any],
     ) -> str | None:
-        if not self.config.enabled:
+        if not self.config.active:
             return self.accepted_ref
         state_dir = self._accepted_state_path()
         manifest = {
@@ -116,6 +117,8 @@ class GitSearchRuntime:
         trial_dir = Path(trial_dir)
         if trial_dir.exists():
             shutil.rmtree(trial_dir, ignore_errors=True)
-        if not self.config.enabled or not self.config.rollback_on_reject or self.accepted_ref is None:
+        if not self.config.active or not self.config.rollback_on_reject or self.accepted_ref is None:
             return
-        _git(self.repo_root, "reset", "--hard", self.accepted_ref)
+        tracked_changes = _git(self.repo_root, "status", "--porcelain").stdout.strip()
+        if tracked_changes:
+            _git(self.repo_root, "reset", "--hard", self.accepted_ref)

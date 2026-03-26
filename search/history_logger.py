@@ -73,8 +73,10 @@ def build_history_entry(
         "trial_id": trial_id,
         "source_metrics_json": source_metrics_json,
         "candidate_path": candidate_path,
+        "proposal": proposal_reason,
         "proposal_reason": proposal_reason,
         "unit_actions": unit_actions,
+        "candidate_config": resolved_config_path,
         "resolved_config_path": resolved_config_path,
         "metrics": metrics,
         "utility": utility,
@@ -86,4 +88,6 @@ def build_history_entry(
         "allocation_reason": allocation_reasons,
         "git_head_before": git_head_before,
         "git_head_after": git_head_after,
+        "commit_hash": git_head_after,
+        "rollback_target": git_head_before,
     }

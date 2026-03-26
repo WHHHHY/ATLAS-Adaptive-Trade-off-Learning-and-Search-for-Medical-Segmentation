@@ -170,11 +170,13 @@ def compute_utility(metrics: dict[str, Any], baseline_metrics: dict[str, Any], o
     param_ratio = max(float(metrics.get("params_effective", metrics.get("params_total", 1.0))) / max(float(baseline_metrics.get("params_effective", baseline_metrics.get("params_total", 1.0))), 1e-8), 1e-8)
     flops_ratio = max(float(metrics.get("flops_effective_g", metrics.get("flops_g", 1.0))) / max(float(baseline_metrics.get("flops_effective_g", baseline_metrics.get("flops_g", 1.0))), 1e-8), 1e-8)
     ram_ratio = max(float(metrics.get("peak_vram_effective_mb", metrics.get("peak_vram_mb", 1.0)) or 1.0) / max(float(baseline_metrics.get("peak_vram_effective_mb", baseline_metrics.get("peak_vram_mb", 1.0)) or 1.0), 1e-8), 1e-8)
+    latency_ratio = max(float(metrics.get("latency_effective_ms", metrics.get("latency_ms", 1.0)) or 1.0) / max(float(baseline_metrics.get("latency_effective_ms", baseline_metrics.get("latency_ms", 1.0)) or 1.0), 1e-8), 1e-8)
     return float(
         objective.lambda_dice * val_dice
         - objective.lambda_param * torch.log(torch.tensor(param_ratio)).item()
         - objective.lambda_flops * torch.log(torch.tensor(flops_ratio)).item()
         - objective.lambda_ram * torch.log(torch.tensor(ram_ratio)).item()
+        - objective.lambda_latency * torch.log(torch.tensor(latency_ratio)).item()
     )
 
 
@@ -186,6 +188,7 @@ def _dry_run_metrics(candidate: Candidate, metrics_payload: dict[str, Any]) -> d
     params_total = 1_000_000.0
     flops_g = 10.0
     peak_vram_mb = 1000.0
+    latency_ms = 25.0
     for action in candidate.unit_actions:
         score = float(action.score_snapshot.S_unit) if action.score_snapshot is not None else 0.5
         risk = float(action.score_snapshot.R_unit) if action.score_snapshot is not None else 0.5
@@ -195,6 +198,7 @@ def _dry_run_metrics(candidate: Candidate, metrics_payload: dict[str, Any]) -> d
             params_total *= 1.0 - 0.20 * ratio
             flops_g *= 1.0 - 0.25 * ratio
             peak_vram_mb *= 1.0 - 0.10 * ratio
+            latency_ms *= 1.0 - 0.08 * ratio
         elif action.action_type == "quantize":
             weight_ratio = float(action.weight_bits or 32) / 32.0
             act_ratio = float(action.act_bits or 32) / 32.0
@@ -202,12 +206,14 @@ def _dry_run_metrics(candidate: Candidate, metrics_payload: dict[str, Any]) -> d
             params_total *= 0.7 + 0.3 * weight_ratio
             flops_g *= 0.7 + 0.3 * ((weight_ratio + act_ratio) / 2.0)
             peak_vram_mb *= 0.7 + 0.3 * act_ratio
+            latency_ms *= 0.85 + 0.15 * ((weight_ratio + act_ratio) / 2.0)
         elif action.action_type == "expand":
             delta = float(action.expand_delta or 0.0)
             val_dice += 0.01 * delta
             params_total *= 1.0 + 0.08 * delta
             flops_g *= 1.0 + 0.10 * delta
             peak_vram_mb *= 1.0 + 0.05 * delta
+            latency_ms *= 1.0 + 0.06 * delta
     return {
         "val_dice": max(0.0, min(1.0, val_dice)),
         "val_loss": float(max(0.0, 1.0 - val_dice)),
@@ -217,6 +223,8 @@ def _dry_run_metrics(candidate: Candidate, metrics_payload: dict[str, Any]) -> d
         "flops_effective_g": float(flops_g),
         "peak_vram_mb": float(peak_vram_mb),
         "peak_vram_effective_mb": float(peak_vram_mb),
+        "latency_ms": float(latency_ms),
+        "latency_effective_ms": float(latency_ms),
         "invalid_trial": False,
         "error_message": None,
         "mode": "dry_run",
@@ -312,6 +320,8 @@ def evaluate_candidate(
             "flops_effective_g": float(profile["flops_effective_g"]),
             "peak_vram_mb": float(profile["peak_vram_mb"]),
             "peak_vram_effective_mb": float(profile["peak_vram_effective_mb"]),
+            "latency_ms": float(profile["latency_ms"]),
+            "latency_effective_ms": float(profile["latency_effective_ms"]),
             "missing_keys": load_info["missing_keys"],
             "unexpected_keys": load_info["unexpected_keys"],
             "invalid_trial": False,
@@ -327,6 +337,8 @@ def evaluate_candidate(
             "flops_effective_g": result_metrics.get("flops_effective_g", result_metrics.get("flops_g", 1.0)),
             "peak_vram_mb": result_metrics.get("peak_vram_mb", 1.0),
             "peak_vram_effective_mb": result_metrics.get("peak_vram_effective_mb", result_metrics.get("peak_vram_mb", 1.0)),
+            "latency_ms": result_metrics.get("latency_ms", 1.0),
+            "latency_effective_ms": result_metrics.get("latency_effective_ms", result_metrics.get("latency_ms", 1.0)),
         }
 
     result_metrics["utility"] = compute_utility(result_metrics, baseline_metrics, program.objective)

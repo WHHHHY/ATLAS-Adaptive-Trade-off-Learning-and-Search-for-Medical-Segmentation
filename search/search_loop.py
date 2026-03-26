@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from datetime import datetime
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -46,6 +47,18 @@ def _save_json(path: str | Path, payload: dict[str, Any]) -> None:
         json.dump(payload, handle, indent=2, ensure_ascii=False)
 
 
+def _copy_if_exists(source: str | Path | None, destination: str | Path) -> str | None:
+    if source is None:
+        return None
+    src_path = Path(source)
+    if not src_path.exists():
+        return None
+    dest_path = Path(destination)
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_path, dest_path)
+    return str(dest_path)
+
+
 def run_search_loop(
     program_path: str | Path,
     metrics_path: str | Path,
@@ -60,11 +73,15 @@ def run_search_loop(
     run_root = Path(output_root).resolve() if output_root is not None else _default_run_root(metrics_path)
     run_root.mkdir(parents=True, exist_ok=True)
     history_path = run_root / "history.jsonl"
-    best_state_path = run_root / "best_state.json"
-    best_candidate_path = run_root / "best_candidate.json"
-    best_metrics_path = run_root / "best_metrics.json"
+    best_dir = run_root / "best"
+    best_state_path = best_dir / "best_state.json"
+    best_candidate_path = best_dir / "best_candidate.json"
+    best_metrics_path = best_dir / "best_metrics.json"
+    best_config_path = best_dir / "best_config.json"
+    best_checkpoint_path = best_dir / "best_ckpt.pt"
     git_runtime = GitSearchRuntime(
         GitRuntimeConfig(
+            enabled=bool(program.runtime.git_enabled),
             repo_root=program.runtime.git_repo_root,
             remote=program.runtime.git_remote,
             branch=program.runtime.git_branch,
@@ -95,12 +112,15 @@ def run_search_loop(
         "candidate_path": str(baseline_candidate_file),
         "metrics_path": baseline_eval["metrics_path"],
         "checkpoint_path": baseline_eval.get("checkpoint_path") or program.base_model_ckpt,
+        "resolved_config_path": baseline_eval["resolved_config_path"],
         "utility": best_utility,
         "source_metrics_json": str(Path(metrics_path).resolve()),
     }
     _save_json(best_state_path, best_state)
     _save_json(best_candidate_path, baseline_candidate.to_dict())
     _save_json(best_metrics_path, baseline_eval["metrics"])
+    _copy_if_exists(baseline_eval["resolved_config_path"], best_config_path)
+    _copy_if_exists(best_state["checkpoint_path"], best_checkpoint_path)
 
     append_history_entry(
         history_path,
@@ -157,12 +177,15 @@ def run_search_loop(
                 "candidate_path": str(candidate_file),
                 "metrics_path": eval_result["metrics_path"],
                 "checkpoint_path": eval_result.get("checkpoint_path") or best_state["checkpoint_path"],
+                "resolved_config_path": eval_result["resolved_config_path"],
                 "utility": utility,
                 "source_metrics_json": str(Path(metrics_path).resolve()),
             }
             _save_json(best_state_path, best_state)
             _save_json(best_candidate_path, candidate.to_dict())
             _save_json(best_metrics_path, eval_result["metrics"])
+            _copy_if_exists(eval_result["resolved_config_path"], best_config_path)
+            _copy_if_exists(best_state["checkpoint_path"], best_checkpoint_path)
             git_head_after = git_runtime.accept(
                 trial_id=trial_id,
                 program_path=program_path,

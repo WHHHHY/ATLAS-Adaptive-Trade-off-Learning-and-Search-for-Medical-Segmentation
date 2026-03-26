@@ -30,10 +30,13 @@ class SearchSmokeTest(unittest.TestCase):
 
     def _init_git_repo(self) -> Path:
         repo_root = self.temp_dir / "repo"
+        remote_root = self.temp_dir / "remote.git"
         repo_root.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init", "--bare", str(remote_root)], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.run(["git", "-C", str(repo_root), "init"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.run(["git", "-C", str(repo_root), "config", "user.name", "Test User"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.run(["git", "-C", str(repo_root), "config", "user.email", "test@example.com"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(["git", "-C", str(repo_root), "remote", "add", "origin", str(remote_root)], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (repo_root / "README.md").write_text("baseline\n", encoding="utf-8")
         subprocess.run(["git", "-C", str(repo_root), "add", "README.md"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.run(["git", "-C", str(repo_root), "commit", "-m", "baseline"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -42,9 +45,10 @@ class SearchSmokeTest(unittest.TestCase):
     def _write_program(self, repo_root: Path, *, commit_on_accept: bool) -> Path:
         program_path = self.temp_dir / ("program_git.yaml" if commit_on_accept else "program_plain.yaml")
         content = PROGRAM_PATH.read_text(encoding="utf-8")
-        content = content.replace("git_repo_root: /root/autodl-tmp/ATLAS", f"git_repo_root: {repo_root}")
-        content = content.replace("git_commit_on_accept: false", f"git_commit_on_accept: {'true' if commit_on_accept else 'false'}")
-        content = content.replace("git_push_on_accept: false", "git_push_on_accept: false")
+        content = content.replace("repo_root: /root/autodl-tmp/ATLAS", f"repo_root: {repo_root}")
+        content = content.replace("enabled: false", "enabled: true")
+        content = content.replace("commit_on_accept: false", f"commit_on_accept: {'true' if commit_on_accept else 'false'}")
+        content = content.replace("push_on_accept: false", "push_on_accept: false")
         content = content.replace("output_path: /root/autodl-tmp/ATLAS/runs/search_artifacts/metrics/example_organ_metrics.json", f"output_path: {self.temp_dir / 'metrics.json'}")
         program_path.write_text(content, encoding="utf-8")
         return program_path
@@ -104,7 +108,7 @@ class SearchSmokeTest(unittest.TestCase):
             git_commit_on_accept=False,
         )
         self.assertTrue((run_root / "history.jsonl").exists())
-        self.assertTrue((run_root / "best_state.json").exists())
+        self.assertTrue((run_root / "best" / "best_state.json").exists())
 
     def test_search_loop_commits_accepted_snapshot_when_enabled(self) -> None:
         repo_root = self._init_git_repo()
